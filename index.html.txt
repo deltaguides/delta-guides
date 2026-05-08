@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>玄机阁 · 窥天机·知天命</title>
+    <style>
+        :root {
+            --bg: #faf8f2;
+            --card: #fffef8;
+            --text: #3a3628;
+            --text-light: #6b6558;
+            --gold: #b49450;
+            --gold-light: #d4b96a;
+            --ink: #2c2820;
+            --border: #e5ddcc;
+            --shadow: 0 4px 20px rgba(0,0,0,0.03);
+            --radius: 2px;
+        }
+
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Noto Serif SC', 'STSong', 'SimSun', 'KaiTi', serif;
+            overflow-x: hidden;
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"><circle cx="12" cy="12" r="10" fill="none" stroke="%23b49450" stroke-width="1"/><circle cx="12" cy="12" r="2" fill="%23b49450" opacity="0.6"/></svg>') 12 12, auto;
+        }
+
+        /* 背景纹理 */
+        body::before {
+            content: '';
+            position: fixed;
+            top:0; left:0; width:100%; height:100%;
+            background: url("data:image/svg+xml,%3Csvg width='40' height='40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h40v40H0z' fill='none'/%3E%3Ccircle cx='20' cy='20' r='0.5' fill='%23d4c9aa' opacity='0.4'/%3E%3C/svg%3E") repeat;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* 墨迹跟随 */
+        #inkTrail {
+            position: fixed;
+            top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:999;
+        }
+
+        /* 主容器 */
+        .container {
+            position: relative;
+            z-index: 10;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 3rem 2rem 5rem;
+        }
+
+        /* 顶部签名 */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 5rem;
+            flex-wrap: wrap;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 1.5rem;
+        }
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            letter-spacing: 0.3em;
+            color: var(--ink);
+        }
+        .logo span {
+            color: var(--gold);
+        }
+        .sub-logo {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            letter-spacing: 0.4em;
+            writing-mode: vertical-rl;
+        }
+
+        /* 英雄区 */
+        .hero {
+            text-align: center;
+            margin-bottom: 5rem;
+            position: relative;
+        }
+        .hero h1 {
+            font-size: 5rem;
+            font-weight: 900;
+            letter-spacing: 0.4em;
+            color: var(--ink);
+            margin-bottom: 0.5rem;
+            line-height: 1.2;
+            text-shadow: 1px 1px 0 var(--gold-light);
+        }
+        .hero .poem {
+            color: var(--text-light);
+            font-size: 1rem;
+            letter-spacing: 0.6em;
+            margin-bottom: 1.5rem;
+        }
+        .hero .decor {
+            width: 60px;
+            height: 1px;
+            background: var(--gold);
+            margin: 0 auto 1.5rem;
+            opacity: 0.6;
+        }
+
+        /* 八卦盘（极简线条） */
+        .bagua-simple {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 2rem;
+            margin-bottom: 5rem;
+            flex-wrap: wrap;
+        }
+        .trigram-circle {
+            width: 100px; height: 100px;
+            border-radius: 50%;
+            border: 1.5px solid var(--gold);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            color: var(--gold);
+            background: rgba(255,255,255,0.5);
+            box-shadow: var(--shadow);
+        }
+        .trigram-text {
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--text-light);
+            letter-spacing: 0.2em;
+            line-height: 1.6;
+        }
+
+        /* 人物卡片（水墨剪影风格） */
+        .sage-section {
+            display: flex;
+            flex-direction: column;
+            gap: 3rem;
+            margin-bottom: 5rem;
+        }
+        .sage-pair {
+            display: flex;
+            gap: 2rem;
+            align-items: flex-start;
+        }
+        .sage-pair.reverse {
+            flex-direction: row-reverse;
+        }
+        .sage-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            padding: 2rem;
+            flex: 1;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .sage-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.06);
+        }
+        /* 人物水墨剪影（纯CSS） */
+        .sage-silhouette {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: var(--ink);
+            position: relative;
+            flex-shrink: 0;
+            margin-right: 1.5rem;
+        }
+        .sage-silhouette::before {
+            content: '';
+            position: absolute;
+            top: 8px; left: 50%; transform: translateX(-50%);
+            width: 30px; height: 20px;
+            background: var(--bg);
+            border-radius: 50%;
+        }
+        .sage-silhouette::after {
+            content: '';
+            position: absolute;
+            bottom: 10px; left: 50%; transform: translateX(-50%);
+            width: 40px; height: 30px;
+            background: var(--bg);
+            border-radius: 0 0 50% 50%;
+        }
+        /* 不同人物微调 */
+        .sage-silhouette.zhugeliang { background: #3a4a5a; }
+        .sage-silhouette.guiguzi { background: #3a5a4a; }
+        .sage-silhouette.yuan { background: #4a3a5a; }
+        .sage-silhouette.liu { background: #5a3a3a; }
+
+        .sage-info {
+            flex: 1;
+        }
+        .sage-name {
+            font-size: 1.3rem;
+            font-weight: bold;
+            letter-spacing: 0.15em;
+            color: var(--ink);
+            margin-bottom: 0.2rem;
+        }
+        .sage-title {
+            font-size: 0.8rem;
+            color: var(--gold);
+            letter-spacing: 0.2em;
+            margin-bottom: 0.5rem;
+        }
+        .sage-quote {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            line-height: 1.8;
+            border-left: 3px solid var(--gold-light);
+            padding-left: 1rem;
+            margin: 1rem 0;
+        }
+        .sage-hook {
+            text-align: right;
+            color: var(--gold);
+            font-size: 0.8rem;
+            letter-spacing: 0.1em;
+        }
+        /* 竖排诗句装饰 */
+        .vertical-verse {
+            writing-mode: vertical-rl;
+            font-size: 0.9rem;
+            color: var(--gold);
+            letter-spacing: 0.3em;
+            white-space: nowrap;
+            margin: 0 1rem;
+            align-self: center;
+        }
+
+        /* 咨询区（圆形涟漪） */
+        .consult-row {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            margin: 4rem 0;
+        }
+        .consult-item {
+            width: 100px; height: 100px;
+            border-radius: 50%;
+            background: var(--card);
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            box-shadow: var(--shadow);
+        }
+        .consult-item:hover {
+            background: var(--gold-light);
+            color: white;
+            border-color: var(--gold);
+            transform: scale(1.1);
+            box-shadow: 0 0 0 8px rgba(180,148,80,0.1);
+        }
+        .consult-item .icon {
+            font-size: 1.8rem;
+            margin-bottom: 0.3rem;
+        }
+        .consult-item .label {
+            font-size: 0.7rem;
+            letter-spacing: 0.2em;
+        }
+
+        /* 使者卡片 */
+        .messenger-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            padding: 2.5rem;
+            text-align: center;
+            margin: 4rem 0;
+        }
+        .messenger-avatar {
+            width: 80px; height: 80px;
+            border-radius: 50%;
+            background: var(--ink);
+            margin: 0 auto 1rem;
+            position: relative;
+        }
+        .messenger-avatar::before {
+            content: ''; position: absolute;
+            top: 10px; left: 50%; transform: translateX(-50%);
+            width: 30px; height: 15px;
+            background: var(--bg); border-radius: 50%;
+        }
+        .btn-douyin {
+            display: inline-block;
+            padding: 0.8rem 2.5rem;
+            background: #0a0a0a;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 50px;
+            letter-spacing: 0.1em;
+            margin-top: 1rem;
+            transition: 0.3s;
+            border: 1px solid #ff0050;
+        }
+        .btn-douyin:hover {
+            background: #ff0050;
+            border-color: #ff0050;
+        }
+    </style>
+</head>
+<body>
+
+<!-- 墨迹跟随层 -->
+<canvas id="inkTrail"></canvas>
+
+<div class="container">
+
+    <!-- 头部 -->
+    <div class="header">
+        <div class="logo">玄<span>·</span>機<span>·</span>閣</div>
+        <div class="sub-logo">窺天機 · 知天命</div>
+    </div>
+
+    <!-- 英雄区 -->
+    <div class="hero">
+        <h1>玄 機 閣</h1>
+        <div class="poem">天 地 如 大 戲 · 劇 本 早 已 寫 下</div>
+        <div class="decor"></div>
+    </div>
+
+    <!-- 八卦极简盘 -->
+    <div class="bagua-simple">
+        <div class="trigram-circle">☰</div>
+        <div class="trigram-text">乾<br>天</div>
+        <div class="trigram-circle">☷</div>
+        <div class="trigram-text">坤<br>地</div>
+        <div class="trigram-circle" style="font-size:1.5rem;">☯</div>
+        <div class="trigram-circle">☵</div>
+        <div class="trigram-text">坎<br>水</div>
+        <div class="trigram-circle">☲</div>
+        <div class="trigram-text">離<br>火</div>
+    </div>
+
+    <!-- 人物区（错位 + 剪影） -->
+    <div class="sage-section">
+
+        <!-- 诸葛亮 -->
+        <div class="sage-pair">
+            <div class="sage-silhouette zhugeliang"></div>
+            <div class="sage-card">
+                <div class="sage-name">諸葛亮 · 孔明</div>
+                <div class="sage-title">三國 · 蜀漢丞相 · 臥龍</div>
+                <div class="sage-quote">“為將者，不通天文，不識地理，不知奇門，不曉陰陽，是庸才也。”</div>
+                <p class="sage-hook">🔮 你的時運，是否也在等待一陣「東風」？</p>
+            </div>
+            <div class="vertical-verse">三分天下<br>臥龍出山</div>
+        </div>
+
+        <!-- 鬼谷子 -->
+        <div class="sage-pair reverse">
+            <div class="sage-silhouette guiguzi"></div>
+            <div class="sage-card">
+                <div class="sage-name">鬼谷子 · 王詡</div>
+                <div class="sage-title">戰國 · 縱橫家之祖 · 雲夢山人</div>
+                <div class="sage-quote">“觀陰陽之開闔，知存亡之門戶，籌策萬類之終始，達人心之理。”</div>
+                <p class="sage-hook">🔮 你的困境，是否差在「看不透人心」？</p>
+            </div>
+            <div class="vertical-verse">捭闔之道<br>縱橫天下</div>
+        </div>
+
+        <!-- 袁天罡 -->
+        <div class="sage-pair">
+            <div class="sage-silhouette yuan"></div>
+            <div class="sage-card">
+                <div class="sage-name">袁天罡 · 李淳風</div>
+                <div class="sage-title">唐朝 · 太史令 · 推背圖</div>
+                <div class="sage-quote">“茫茫天數此中求，世道興衰不自由。萬萬千千說不盡，不如推背去歸休。”</div>
+                <p class="sage-hook">🔮 你的命格劇本，下一頁寫著什麼？</p>
+            </div>
+            <div class="vertical-verse">推背預言<br>窺破千年</div>
+        </div>
+
+        <!-- 刘伯温 -->
+        <div class="sage-pair reverse">
+            <div class="sage-silhouette liu"></div>
+            <div class="sage-card">
+                <div class="sage-name">劉伯溫 · 劉基</div>
+                <div class="sage-title">明朝 · 開國謀臣 · 誠意伯</div>
+                <div class="sage-quote">“未來之事，非不可知。天地如大戲，劇本早已寫下，只待有緣人翻閱。”</div>
+                <p class="sage-hook">🔮 你的「劇本」下一頁，寫著怎樣的命運？</p>
+            </div>
+            <div class="vertical-verse">前知五百<br>後知五百</div>
+        </div>
+    </div>
+
+    <!-- 咨询区 -->
+    <div class="consult-row">
+        <div class="consult-item"><div class="icon">💕</div><div class="label">姻緣</div></div>
+        <div class="consult-item"><div class="icon">💰</div><div class="label">財運</div></div>
+        <div class="consult-item"><div class="icon">🏛️</div><div class="label">事業</div></div>
+        <div class="consult-item"><div class="icon">🏠</div><div class="label">風水</div></div>
+        <div class="consult-item"><div class="icon">🌙</div><div class="label">夢境</div></div>
+        <div class="consult-item"><div class="icon">🛡️</div><div class="label">化煞</div></div>
+    </div>
+
+    <!-- 使者区 -->
+    <div class="messenger-card">
+        <div class="messenger-avatar"></div>
+        <div class="sage-name">東 方 使 者 · 玄 機 子</div>
+        <div class="sage-title">承千年智慧 · 解今世困惑</div>
+        <a href="https://www.douyin.com/user/595226711" target="_blank" class="btn-douyin">
+            🎵 添加抖音 · 595226711
+        </a>
+    </div>
+</div>
+
+<script>
+    // 墨迹跟随效果
+    const canvas = document.getElementById('inkTrail');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    let points = [];
+    function draw() {
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        for(let i=1; i<points.length; i++){
+            const p = points[i];
+            const prev = points[i-1];
+            ctx.beginPath();
+            ctx.moveTo(prev.x, prev.y);
+            ctx.lineTo(p.x, p.y);
+            ctx.strokeStyle = `rgba(180,148,80,${p.opacity})`;
+            ctx.lineWidth = p.size;
+            ctx.lineCap = 'round';
+            ctx.stroke();
+        }
+        requestAnimationFrame(draw);
+    }
+    draw();
+
+    window.addEventListener('mousemove', (e) => {
+        points.push({
+            x: e.clientX,
+            y: e.clientY,
+            opacity: 0.2 + Math.random()*0.1,
+            size: 1 + Math.random()*2,
+            time: Date.now()
+        });
+        if(points.length > 80) points = points.slice(-60);
+    });
+
+    // 点击涟漪
+    window.addEventListener('click', (e) => {
+        for(let i=0; i<5; i++){
+            points.push({
+                x: e.clientX + (Math.random()-0.5)*20,
+                y: e.clientY + (Math.random()-0.5)*20,
+                opacity: 0.4,
+                size: 3 + Math.random()*3,
+                time: Date.now()
+            });
+        }
+    });
+
+    window.addEventListener('resize', () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    });
+</script>
+</body>
+</html>
